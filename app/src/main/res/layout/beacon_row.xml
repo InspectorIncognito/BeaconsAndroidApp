@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/majorTextView"
+        android:layout_above="@+id/minorLabel"
+        android:layout_alignLeft="@+id/minorTextView"
+        android:layout_alignStart="@+id/minorTextView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Minor"
+        android:id="@+id/minorLabel"
+        android:layout_below="@+id/majorLabel"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/minorTextView"
+        android:layout_marginLeft="40dp"
+        android:layout_marginStart="40dp"
+        android:layout_alignTop="@+id/minorLabel"
+        android:layout_toRightOf="@+id/minorLabel"
+        android:layout_toEndOf="@+id/minorLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Major"
+        android:id="@+id/majorLabel"
+        android:layout_marginTop="19dp"
+        android:layout_below="@+id/powerLabel"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/powerLabel"
+        android:text="Power"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/powerTextView"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/majorTextView" />
+
+</RelativeLayout>
