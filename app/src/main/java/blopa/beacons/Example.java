@@ -2,6 +2,7 @@ package blopa.beacons;
 
 
 import android.content.Context;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,7 +20,20 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.MacAddress;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.SystemRequirementsChecker;
+import com.estimote.sdk.connection.DeviceConnection;
+import com.estimote.sdk.connection.DeviceConnectionCallback;
+import com.estimote.sdk.connection.DeviceConnectionProvider;
+import com.estimote.sdk.connection.exceptions.DeviceConnectionException;
+import com.estimote.sdk.connection.scanner.ConfigurableDevice;
+import com.estimote.sdk.connection.scanner.ConfigurableDevicesScanner;
+import com.estimote.sdk.connection.scanner.DeviceType;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -36,6 +50,10 @@ public class Example extends AppCompatActivity {
     private BeaconLog beaconLog;
     private long threshold;
     private long time;
+    private static final String FILENAME = "testBeacon.txt";
+    FileOutputStream outputStream;
+    FileInputStream inputStream;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +62,7 @@ public class Example extends AppCompatActivity {
         Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
         threshold= 5;
         time= 0;
+        File file = new File(this.getFilesDir(), FILENAME);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -76,7 +95,7 @@ public class Example extends AppCompatActivity {
 
     public void setupBeaconSDK() {
         beaconManager = new BeaconManager(this);
-        beaconManager.setForegroundScanPeriod(500, 0);
+        beaconManager.setForegroundScanPeriod(200, 0);
 
         region = new Region("Region", null/*UUID.fromString("7eccfcfa-f334-4042-9dc2-5b5432c33e06")*/, null, null);
 
@@ -86,12 +105,12 @@ public class Example extends AppCompatActivity {
                 nearestBeacons.clear();
                 nearestBeacons.addAll(list);
                 adapter.notifyDataSetChanged();
-                Calendar c = Calendar.getInstance();
 
+                Calendar c = Calendar.getInstance();
                 if(c.getTimeInMillis()- time >= threshold *1000) {
                     addBeaconsToOptions(list);
 
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
                     String strDate = sdf.format(c.getTime());
                     beaconLog.addMeasure(list, strDate);
 
@@ -101,6 +120,22 @@ public class Example extends AppCompatActivity {
                 }
             }
         });
+    }
+    public void logToFile(View view) {
+        File file = this.getExternalCacheDir();
+        file.mkdir();
+        File file2 = new File(file, FILENAME);
+        try {
+            FileOutputStream fos = new FileOutputStream(file2);
+            for (StringMacAddress mAddress : majorMinor) {
+                if (mAddress.majorMinor == "") continue;
+                String string = beaconLog.getLog(mAddress.mAddress);
+                fos.write(string.getBytes());
+            }
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void addBeaconsToOptions(List<Beacon> list) {

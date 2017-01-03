@@ -26,4 +26,13 @@
         android:minHeight="50dp"
         android:spinnerMode="dialog" />
 
+    <Button
+        android:text="Log to file"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/setter"
+        android:onClick="logToFile"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
 </RelativeLayout>
