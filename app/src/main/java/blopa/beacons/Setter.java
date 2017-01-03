@@ -7,9 +7,9 @@ package blopa.beacons;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.Beacon;
-//import com.skybeacon.sdk.*;
 
-//import com.estimote.sdk.connection.BeaconConnection
+
+
 //
 //public class Setter {
 //

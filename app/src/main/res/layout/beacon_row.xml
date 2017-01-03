@@ -60,4 +60,13 @@
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/majorTextView" />
 
+    <Button
+        android:text="Change Settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/majorTextView"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/setter"
+        android:onClick="changeSettings" />
+
 </RelativeLayout>
