@@ -40,14 +40,14 @@
         android:text="Major"
         android:id="@+id/majorLabel"
         android:layout_marginTop="19dp"
-        android:layout_below="@+id/powerLabel"
+        android:layout_below="@+id/uuidLabel"
         android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:id="@+id/powerLabel"
+        android:id="@+id/uuidLabel"
         android:text="Power"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
@@ -59,14 +59,5 @@
         android:id="@+id/powerTextView"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/majorTextView" />
-
-    <Button
-        android:text="Change Settings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/majorTextView"
-        android:layout_alignParentEnd="true"
-        android:id="@+id/setter"
-        android:onClick="changeSettings" />
 
 </RelativeLayout>

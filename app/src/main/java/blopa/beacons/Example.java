@@ -2,7 +2,6 @@ package blopa.beacons;
 
 
 import android.content.Context;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,20 +19,14 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.MacAddress;
 import com.estimote.sdk.Region;
 import com.estimote.sdk.SystemRequirementsChecker;
-import com.estimote.sdk.connection.DeviceConnection;
-import com.estimote.sdk.connection.DeviceConnectionCallback;
-import com.estimote.sdk.connection.DeviceConnectionProvider;
-import com.estimote.sdk.connection.exceptions.DeviceConnectionException;
-import com.estimote.sdk.connection.scanner.ConfigurableDevice;
-import com.estimote.sdk.connection.scanner.ConfigurableDevicesScanner;
-import com.estimote.sdk.connection.scanner.DeviceType;
 
-import java.io.BufferedReader;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,8 +44,6 @@ public class Example extends AppCompatActivity {
     private long threshold;
     private long time;
     private static final String FILENAME = "testBeacon.txt";
-    FileOutputStream outputStream;
-    FileInputStream inputStream;
 
 
     @Override
@@ -62,7 +53,6 @@ public class Example extends AppCompatActivity {
         Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
         threshold= 5;
         time= 0;
-        File file = new File(this.getFilesDir(), FILENAME);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -86,7 +76,7 @@ public class Example extends AppCompatActivity {
 
         ListView listView = (ListView) findViewById(R.id.nearestBeaconsList);
         nearestBeacons = new ArrayList<>();
-        majorMinor = new ArrayList<StringMacAddress>();
+        majorMinor = new ArrayList<>();
         majorMinor.add(new StringMacAddress("",""));
         beaconLog = new BeaconLog();
         adapter = new NearestBeaconAdapter(this, nearestBeacons);
@@ -110,9 +100,11 @@ public class Example extends AppCompatActivity {
                 if(c.getTimeInMillis()- time >= threshold *1000) {
                     addBeaconsToOptions(list);
 
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                    String strDate = sdf.format(c.getTime());
-                    beaconLog.addMeasure(list, strDate);
+                    SimpleDateFormat dateMeasure = new SimpleDateFormat("dd/MM/yyyy");
+                    SimpleDateFormat timeMeasure = new SimpleDateFormat("HH:mm:ss");
+                    String strDate = dateMeasure.format(c.getTime());
+                    String strTime = timeMeasure.format(c.getTime());
+                    beaconLog.addMeasure(list, strDate, strTime);
 
                     updateSpinner();
 
@@ -123,12 +115,11 @@ public class Example extends AppCompatActivity {
     }
     public void logToFile(View view) {
         File file = this.getExternalCacheDir();
-        file.mkdir();
         File file2 = new File(file, FILENAME);
         try {
             FileOutputStream fos = new FileOutputStream(file2);
             for (StringMacAddress mAddress : majorMinor) {
-                if (mAddress.majorMinor == "") continue;
+                if (mAddress.majorMinor.equals("")) continue;
                 String string = beaconLog.getLog(mAddress.mAddress);
                 fos.write(string.getBytes());
             }
@@ -136,6 +127,20 @@ public class Example extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public JSONArray createJsonArray() throws JSONException {
+        JSONArray json = new JSONArray();
+        for (StringMacAddress mAddress : majorMinor) {
+            if (mAddress.majorMinor.equals("")) continue;
+            json.put(beaconLog.createJSONBeacon(mAddress.mAddress.toString()));
+        }
+        return json;
+    }
+
+    public void sendJson(View view) throws JSONException {
+        Log.d("Json", createJsonArray().toString());
+        //TODO Connect to server
     }
 
     private void addBeaconsToOptions(List<Beacon> list) {
@@ -208,7 +213,7 @@ public class Example extends AppCompatActivity {
         Context context;
         List<Beacon> beacons;
 
-        public NearestBeaconAdapter(Context context, List<Beacon> objects) {
+        NearestBeaconAdapter(Context context, List<Beacon> objects) {
             super(context, -1, objects);
             this.context = context;
             this.beacons = objects;
@@ -252,30 +257,30 @@ public class Example extends AppCompatActivity {
 
         HashMap<String, List<BeaconLogAdapter>> beaconsLog;
 
-        public BeaconLog(){
+        BeaconLog(){
             beaconsLog = new HashMap<String, List<BeaconLogAdapter>>();
         }
 
-        public void addMeasure(List<Beacon> list, String time){
+        void addMeasure(List<Beacon> list, String date, String time){
             for(Beacon beacon: list) {
                 String beaconAddress = beacon.getMacAddress().toString();
                 if(beaconsLog.containsKey(beaconAddress)){
-                    beaconsLog.get(beaconAddress).add(new BeaconLogAdapter(beacon, time));
+                    beaconsLog.get(beaconAddress).add(new BeaconLogAdapter(beacon, date, time));
                 }
                 else{
                     List<BeaconLogAdapter> beacons = new ArrayList<BeaconLogAdapter>();
-                    beacons.add(new BeaconLogAdapter(beacon, time));
+                    beacons.add(new BeaconLogAdapter(beacon, date, time));
                     beaconsLog.put(beaconAddress, beacons);
                 }
             }
         }
 
-        public boolean exist(String mAddress){
+        boolean exist(String mAddress){
             return beaconsLog.containsKey(mAddress);
         }
 
 
-        public String getLog(String mAddress){
+        String getLog(String mAddress){
             StringBuilder log = new StringBuilder("");
             for (BeaconLogAdapter beaconLog: beaconsLog.get(mAddress)){
                 log.append(beaconLog.toString()+"\n");
@@ -283,19 +288,51 @@ public class Example extends AppCompatActivity {
             return log.toString();
         }
 
+        JSONObject createJSONBeacon(String mAddress) throws JSONException {
+
+            JSONObject beaconJson = new JSONObject();
+            JSONArray logJson = new JSONArray();
+            List<BeaconLogAdapter> beaconLogList = beaconsLog.get(mAddress);
+
+            for (BeaconLogAdapter beacon: beaconLogList){
+                JSONObject beaconJsArray = new JSONObject();
+
+                beaconJsArray.put("Date", beacon.date);
+                beaconJsArray.put("Time", beacon.time);
+                beaconJsArray.put("RSSI", beacon.beacon.getRssi());
+
+                logJson.put(beaconJsArray);
+            }
+
+            if(beaconLogList.isEmpty()) return beaconJson;
+
+            BeaconLogAdapter beaconLog = beaconLogList.get(0);
+            beaconJson.put("Mac Address", beaconLog.beacon.getMacAddress());
+            beaconJson.put("UUID",beaconLog.beacon.getProximityUUID());
+            beaconJson.put("Major",beaconLog.beacon.getMajor());
+            beaconJson.put("Minor",beaconLog.beacon.getMinor());
+            beaconJson.put("Measure Power", beaconLog.beacon.getMeasuredPower());
+            beaconJson.put("Log", logJson);
+
+            return beaconJson;
+        }
+
         private class BeaconLogAdapter {
             Beacon beacon;
             String time;
+            String date;
 
-            BeaconLogAdapter(Beacon beacon, String time) {
+            BeaconLogAdapter(Beacon beacon, String date, String time) {
                 this.beacon = beacon;
                 this.time = time;
+                this.date = date;
             }
 
             @Override
             public String toString() {
-                return String.format("%s --> Beacon: UUID %s; Major %d; Minor %d; Measure Power %d; RSSI %d",
-                        this.time, this.beacon.getProximityUUID().toString(),
+                return String.format("%s %s --> Beacon %s: UUID %s; Major %d; Minor %d; Measure Power %d; RSSI %d",
+                        this.date, this.time, this.beacon.getMacAddress().toString(),
+                        this.beacon.getProximityUUID().toString(),
                         this.beacon.getMajor(), this.beacon.getMinor(),
                         this.beacon.getMeasuredPower(),
                         this.beacon.getRssi());
