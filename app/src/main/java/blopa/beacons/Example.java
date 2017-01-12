@@ -1,18 +1,17 @@
 package blopa.beacons;
 
-
-import android.content.Context;
+import android.app.ProgressDialog;
+import android.os.AsyncTask;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -30,21 +29,28 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 
-public class Example extends AppCompatActivity {
+public class Example extends AppCompatActivity implements EventActivityInterface {
+
+    private ProgressDialog pDialog;
+
+    private static String url ="http://200.9.100.91:8080/gpsonline/beacon/save";
 
     BeaconManager beaconManager;
     Region region;
     List<Beacon> nearestBeacons;
     List<StringMacAddress> majorMinor;
+    List<EventLog> events;
     private NearestBeaconAdapter adapter;
     private BeaconLog beaconLog;
     private long threshold;
     private long time;
     private static final String FILENAME = "testBeacon.txt";
 
+    /**
+     * Beacon Scanner
+     **/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +76,46 @@ public class Example extends AppCompatActivity {
         setupBeaconSDK();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
+
+        connectToService();
+    }
+
+    public void connectToService() {
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+                beaconManager.startRanging(region);
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        disconnectFromService();
+        super.onPause();
+    }
+
+    public void disconnectFromService() {
+        beaconManager.stopRanging(region);
+    }
+
+
+    /**
+     * Initial Setup
+     **/
+
+
+
     public void setupListView() {
         Calendar c = Calendar.getInstance();
         time = c.getTimeInMillis();
 
         ListView listView = (ListView) findViewById(R.id.nearestBeaconsList);
+        events = new ArrayList<>();
         nearestBeacons = new ArrayList<>();
         majorMinor = new ArrayList<>();
         majorMinor.add(new StringMacAddress("",""));
@@ -99,12 +140,7 @@ public class Example extends AppCompatActivity {
                 Calendar c = Calendar.getInstance();
                 if(c.getTimeInMillis()- time >= threshold *1000) {
                     addBeaconsToOptions(list);
-
-                    SimpleDateFormat dateMeasure = new SimpleDateFormat("dd/MM/yyyy");
-                    SimpleDateFormat timeMeasure = new SimpleDateFormat("HH:mm:ss");
-                    String strDate = dateMeasure.format(c.getTime());
-                    String strTime = timeMeasure.format(c.getTime());
-                    beaconLog.addMeasure(list, strDate, strTime);
+                    beaconLog.addMeasure(list, getTime(c));
 
                     updateSpinner();
 
@@ -113,6 +149,12 @@ public class Example extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * Buttons
+     **/
+
+
     public void logToFile(View view) {
         File file = this.getExternalCacheDir();
         File file2 = new File(file, FILENAME);
@@ -129,18 +171,39 @@ public class Example extends AppCompatActivity {
         }
     }
 
-    public JSONArray createJsonArray() throws JSONException {
-        JSONArray json = new JSONArray();
-        for (StringMacAddress mAddress : majorMinor) {
-            if (mAddress.majorMinor.equals("")) continue;
-            json.put(beaconLog.createJSONBeacon(mAddress.mAddress.toString()));
-        }
-        return json;
+    public void markEvent(View view) {
+        DialogFragment newFragment = new EventDialogFragment();
+        newFragment.show(getSupportFragmentManager(), "events");
     }
 
-    public void sendJson(View view) throws JSONException {
-        Log.d("Json", createJsonArray().toString());
-        //TODO Connect to server
+    @Override
+    public void onTextSend(String text) {
+        Calendar c = Calendar.getInstance();
+        String strTime = getTime(c);
+
+        events.add(new EventLog(strTime,text));
+    }
+
+    public void sendJson(View view) throws JSONException, IOException {
+        JSONObject json= createJsonObject();
+        new AsyncConnection(json).execute();
+        reset();
+    }
+
+    public void updateSpinner(){
+        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
+        ArrayAdapter<StringMacAddress> adapter2 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, majorMinor);
+        spinner.setAdapter(adapter2);
+    }
+
+    /**
+     * Aux functions
+     **/
+
+
+    private String getTime(Calendar c) {
+        SimpleDateFormat timeMeasure = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return timeMeasure.format(c.getTime());
     }
 
     private void addBeaconsToOptions(List<Beacon> list) {
@@ -152,191 +215,107 @@ public class Example extends AppCompatActivity {
         }
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        SystemRequirementsChecker.checkWithDefaultDialogs(this);
-
-        connectToService();
-    }
-
-    public void connectToService() {
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
-                beaconManager.startRanging(region);
-            }
-        });
-    }
-
-    @Override
-    protected void onPause() {
-        disconnectFromService();
-        super.onPause();
-    }
-
-    public void updateSpinner(){
-        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
-        ArrayAdapter<StringMacAddress> adapter2 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, majorMinor);
-        spinner.setAdapter(adapter2);
-    }
-
-    public void disconnectFromService() {
-        beaconManager.stopRanging(region);
-    }
-
     public void getLog(String mAddress) {
         Log.d("BeaconLog",beaconLog.getLog(mAddress));
     }
 
-    class StringMacAddress {
-        String majorMinor;
-        String mAddress;
+    public JSONObject createJsonObject() throws JSONException {
+        JSONObject json = new JSONObject();
 
-        StringMacAddress(String string, String mAddress){
-            this.majorMinor = string;
-            this.mAddress = mAddress;
+        JSONArray beacons = new JSONArray();
+        for (StringMacAddress mAddress : majorMinor) {
+            if (mAddress.majorMinor.equals("")) continue;
+            beacons.put(beaconLog.createJsonBeacon(mAddress.mAddress));
         }
 
-        @Override
-        public String toString(){
-            return this.majorMinor;
+        json.put("Beacons", beacons);
+        json.put("Events", createJsonEvents());
+
+        return json;
+    }
+
+    private JSONArray createJsonEvents() throws JSONException {
+        JSONArray eventList = new JSONArray();
+        for (EventLog event : events) {
+            eventList.put(event.getJsonObject());
         }
+        return eventList;
     }
 
 
-
-
-
-    private class NearestBeaconAdapter extends ArrayAdapter<Beacon> {
-        Context context;
-        List<Beacon> beacons;
-
-        NearestBeaconAdapter(Context context, List<Beacon> objects) {
-            super(context, -1, objects);
-            this.context = context;
-            this.beacons = objects;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View rowView = convertView;
-
-            if (rowView == null) {
-                LayoutInflater inflater = LayoutInflater.from(context);
-                rowView = inflater.inflate(R.layout.beacon_row, null);
-                ViewHolder viewHolder = new ViewHolder();
-                viewHolder.power = (TextView) rowView.findViewById(R.id.powerTextView);
-                viewHolder.minor = (TextView) rowView.findViewById(R.id.minorTextView);
-                viewHolder.major = (TextView) rowView.findViewById(R.id.majorTextView);
-                rowView.setTag(viewHolder);
-            }
-
-            ViewHolder holder = (ViewHolder) rowView.getTag();
-
-            Beacon beacon = beacons.get(position);
-            holder.power.setText(String.valueOf(beacon.getRssi()));
-            holder.minor.setText(String.valueOf(beacon.getMinor()));
-            holder.major.setText(String.valueOf(beacon.getMajor()));
-
-            return rowView;
-        }
-
-        class ViewHolder {
-            TextView power;
-            TextView minor;
-            TextView major;
-        }
+    public void reset(){
+        beaconLog.reset();
+        events = new ArrayList<>();
+        majorMinor = new ArrayList<>();
+        majorMinor.add(new StringMacAddress("",""));
     }
 
 
+    /**
+     * Async class
+     *
+      */
 
 
-    private class BeaconLog {
+    private class AsyncConnection extends AsyncTask<Void, Void, Void> {
+        JSONObject json;
 
-        HashMap<String, List<BeaconLogAdapter>> beaconsLog;
-
-        BeaconLog(){
-            beaconsLog = new HashMap<String, List<BeaconLogAdapter>>();
+        AsyncConnection(JSONObject json){
+            this.json =  json;
         }
 
-        void addMeasure(List<Beacon> list, String date, String time){
-            for(Beacon beacon: list) {
-                String beaconAddress = beacon.getMacAddress().toString();
-                if(beaconsLog.containsKey(beaconAddress)){
-                    beaconsLog.get(beaconAddress).add(new BeaconLogAdapter(beacon, date, time));
-                }
-                else{
-                    List<BeaconLogAdapter> beacons = new ArrayList<BeaconLogAdapter>();
-                    beacons.add(new BeaconLogAdapter(beacon, date, time));
-                    beaconsLog.put(beaconAddress, beacons);
-                }
-            }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+            pDialog = new ProgressDialog(Example.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
         }
 
-        boolean exist(String mAddress){
-            return beaconsLog.containsKey(mAddress);
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            HttpHandler sh = new HttpHandler();
+
+            // Making a request to url and getting response
+            String response = null;
+            try {
+                response = sh.makeServiceCall(url, json);
+            }  catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (response != null) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                                "Json sent",
+                                Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                                "Couldn't get json from server. Check LogCat for possible errors!",
+                                Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
+            }
+            return null;
         }
 
-
-        String getLog(String mAddress){
-            StringBuilder log = new StringBuilder("");
-            for (BeaconLogAdapter beaconLog: beaconsLog.get(mAddress)){
-                log.append(beaconLog.toString()+"\n");
-            }
-            return log.toString();
-        }
-
-        JSONObject createJSONBeacon(String mAddress) throws JSONException {
-
-            JSONObject beaconJson = new JSONObject();
-            JSONArray logJson = new JSONArray();
-            List<BeaconLogAdapter> beaconLogList = beaconsLog.get(mAddress);
-
-            for (BeaconLogAdapter beacon: beaconLogList){
-                JSONObject beaconJsArray = new JSONObject();
-
-                beaconJsArray.put("Date", beacon.date);
-                beaconJsArray.put("Time", beacon.time);
-                beaconJsArray.put("RSSI", beacon.beacon.getRssi());
-
-                logJson.put(beaconJsArray);
-            }
-
-            if(beaconLogList.isEmpty()) return beaconJson;
-
-            BeaconLogAdapter beaconLog = beaconLogList.get(0);
-            beaconJson.put("Mac Address", beaconLog.beacon.getMacAddress());
-            beaconJson.put("UUID",beaconLog.beacon.getProximityUUID());
-            beaconJson.put("Major",beaconLog.beacon.getMajor());
-            beaconJson.put("Minor",beaconLog.beacon.getMinor());
-            beaconJson.put("Measure Power", beaconLog.beacon.getMeasuredPower());
-            beaconJson.put("Log", logJson);
-
-            return beaconJson;
-        }
-
-        private class BeaconLogAdapter {
-            Beacon beacon;
-            String time;
-            String date;
-
-            BeaconLogAdapter(Beacon beacon, String date, String time) {
-                this.beacon = beacon;
-                this.time = time;
-                this.date = date;
-            }
-
-            @Override
-            public String toString() {
-                return String.format("%s %s --> Beacon %s: UUID %s; Major %d; Minor %d; Measure Power %d; RSSI %d",
-                        this.date, this.time, this.beacon.getMacAddress().toString(),
-                        this.beacon.getProximityUUID().toString(),
-                        this.beacon.getMajor(), this.beacon.getMinor(),
-                        this.beacon.getMeasuredPower(),
-                        this.beacon.getRssi());
-            }
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            if (pDialog.isShowing())
+                pDialog.dismiss();
         }
     }
 }

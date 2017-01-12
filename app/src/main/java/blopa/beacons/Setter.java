@@ -4,11 +4,6 @@ package blopa.beacons;
  * Created by Blopa on 26-12-2016.
  */
 
-import com.estimote.sdk.BeaconManager;
-import com.estimote.sdk.Region;
-import com.estimote.sdk.Beacon;
-
-
 
 //
 //public class Setter {

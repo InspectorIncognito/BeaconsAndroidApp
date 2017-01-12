@@ -45,4 +45,15 @@
         android:layout_alignStart="@+id/setter"
         android:onClick="sendJson" />
 
+    <Button
+        android:text="Important event"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/json"
+        android:layout_alignParentEnd="true"
+        android:layout_alignStart="@+id/json"
+        android:id="@+id/event"
+        android:textSize="12sp"
+        android:onClick="markEvent"  />
+
 </RelativeLayout>
