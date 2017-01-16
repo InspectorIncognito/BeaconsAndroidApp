@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="event_name_array">
+        <item>Get on the bus</item>
+        <item>Get off the bus</item>
+        <item>The bus has arrived</item>
+        <item>The bus has gone</item>
+    </string-array>
+</resources>

@@ -5,5 +5,5 @@ package blopa.beacons;
  */
 
 public interface EventActivityInterface {
-    public void onTextSend(String text);
+    public void onTextSend(String strTime,String text);
 }

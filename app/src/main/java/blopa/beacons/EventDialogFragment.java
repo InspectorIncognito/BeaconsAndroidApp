@@ -6,7 +6,12 @@ import android.content.Context;
 import android.support.v4.app.DialogFragment ;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Blopa on 10-01-2017.
@@ -14,12 +19,16 @@ import android.widget.EditText;
 
 public class EventDialogFragment extends DialogFragment {
 
+    String time;
     EventActivityInterface eventCallback;
     private EditText mEdit;
 
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
+
+        Bundle bundle = getArguments();
+        this.time = bundle.getString("Time");
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
@@ -32,15 +41,23 @@ public class EventDialogFragment extends DialogFragment {
     }
 
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        final String[] array = getResources().getStringArray(R.array.event_name_array);
         mEdit = new EditText(getActivity());
         return new AlertDialog.Builder(getActivity())
-                .setMessage("Event Name")
-                .setPositiveButton("OK",new DialogInterface.OnClickListener() {
+                .setTitle("Event Name")
+                .setItems(R.array.event_name_array, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        eventCallback.onTextSend(time,array[which]);
+                    }
+                })
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        eventCallback.onTextSend(mEdit.getText().toString());
-                    }})
-                .setNegativeButton("CANCEL", null).setView(mEdit).create();
-
+                        eventCallback.onTextSend(time, mEdit.getText().toString());
+                    }
+                })
+                .setNegativeButton("CANCEL", null)
+                .setView(mEdit)
+                .create();
     }
 }

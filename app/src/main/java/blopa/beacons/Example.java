@@ -172,14 +172,19 @@ public class Example extends AppCompatActivity implements EventActivityInterface
     }
 
     public void markEvent(View view) {
+
+        Calendar c = Calendar.getInstance();
+        String strTime = getTime(c);
+
         DialogFragment newFragment = new EventDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("Time", strTime);
+        newFragment.setArguments(bundle);
         newFragment.show(getSupportFragmentManager(), "events");
     }
 
     @Override
-    public void onTextSend(String text) {
-        Calendar c = Calendar.getInstance();
-        String strTime = getTime(c);
+    public void onTextSend(String strTime, String text) {
 
         events.add(new EventLog(strTime,text));
     }
@@ -254,7 +259,7 @@ public class Example extends AppCompatActivity implements EventActivityInterface
     /**
      * Async class
      *
-      */
+     **/
 
 
     private class AsyncConnection extends AsyncTask<Void, Void, Void> {
