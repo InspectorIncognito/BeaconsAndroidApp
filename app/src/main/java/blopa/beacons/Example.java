@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.provider.Settings.Secure;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -190,7 +191,13 @@ public class Example extends AppCompatActivity implements EventActivityInterface
     }
 
     public void sendJson(View view) throws JSONException, IOException {
-        JSONObject json= createJsonObject();
+        JSONObject data= createJsonObject();
+        JSONObject json= new JSONObject();
+        String android_id = Secure.getString(this.getContentResolver(),
+                Secure.ANDROID_ID);
+        json.put("DeviceID",android_id);
+        json.put("MeasureData", data);
+        Log.d("Json",json.toString());
         new AsyncConnection(json).execute();
         reset();
     }

@@ -43,6 +43,8 @@ public class EventDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final String[] array = getResources().getStringArray(R.array.event_name_array);
         mEdit = new EditText(getActivity());
+        mEdit.setHint("Other");
+        mEdit.setPadding(35,0,0,10);
         return new AlertDialog.Builder(getActivity())
                 .setTitle("Event Name")
                 .setItems(R.array.event_name_array, new DialogInterface.OnClickListener() {
