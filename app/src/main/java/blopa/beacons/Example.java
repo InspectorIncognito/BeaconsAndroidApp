@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.provider.Settings.Secure;
 
@@ -38,6 +39,7 @@ public class Example extends AppCompatActivity implements EventActivityInterface
 
     private static String url ="http://200.9.100.91:8080/gpsonline/beacon/save";
 
+    private String android_id;
     BeaconManager beaconManager;
     Region region;
     List<Beacon> nearestBeacons;
@@ -60,6 +62,9 @@ public class Example extends AppCompatActivity implements EventActivityInterface
         Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
         threshold= 5;
         time= 0;
+        android_id = Secure.getString(this.getContentResolver(),
+                Secure.ANDROID_ID);
+        ((TextView) findViewById(R.id.deviceID)).setText(android_id);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -193,13 +198,9 @@ public class Example extends AppCompatActivity implements EventActivityInterface
     public void sendJson(View view) throws JSONException, IOException {
         JSONObject data= createJsonObject();
         JSONObject json= new JSONObject();
-        String android_id = Secure.getString(this.getContentResolver(),
-                Secure.ANDROID_ID);
         json.put("DeviceID",android_id);
         json.put("MeasureData", data);
-        Log.d("Json",json.toString());
         new AsyncConnection(json).execute();
-        reset();
     }
 
     public void updateSpinner(){
@@ -307,6 +308,7 @@ public class Example extends AppCompatActivity implements EventActivityInterface
                                 "Json sent",
                                 Toast.LENGTH_LONG)
                                 .show();
+                        reset();
                     }
                 });
             } else {

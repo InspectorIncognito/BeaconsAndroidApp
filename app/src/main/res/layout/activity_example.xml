@@ -56,4 +56,11 @@
         android:textSize="12sp"
         android:onClick="markEvent"  />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/event"
+        android:id="@+id/deviceID"
+        android:layout_alignStart="@+id/event" />
+
 </RelativeLayout>
