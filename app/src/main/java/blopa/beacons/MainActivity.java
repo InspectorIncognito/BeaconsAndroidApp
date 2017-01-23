@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class Example extends AppCompatActivity implements EventActivityInterface {
+public class MainActivity extends AppCompatActivity implements EventActivityInterface {
 
     private ProgressDialog pDialog;
 
@@ -58,7 +58,7 @@ public class Example extends AppCompatActivity implements EventActivityInterface
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_example);
+        setContentView(R.layout.main_activity);
         Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
         threshold= 5;
         time= 0;
@@ -281,7 +281,7 @@ public class Example extends AppCompatActivity implements EventActivityInterface
         protected void onPreExecute() {
             super.onPreExecute();
             // Showing progress dialog
-            pDialog = new ProgressDialog(Example.this);
+            pDialog = new ProgressDialog(MainActivity.this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
             pDialog.show();

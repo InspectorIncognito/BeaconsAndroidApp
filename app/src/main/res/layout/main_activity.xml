@@ -24,25 +24,29 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:minHeight="50dp"
-        android:spinnerMode="dialog" />
+        android:spinnerMode="dialog"
+        android:visibility="invisible"
+        android:clickable="false" />
 
     <Button
         android:text="Log to file"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/setter"
+        android:id="@+id/logToFile"
         android:onClick="logToFile"
         android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:visibility="invisible"
+        android:clickable="false" />
 
     <Button
-        android:text="JSON"
+        android:text="Send data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/json"
-        android:layout_below="@+id/setter"
+        android:layout_below="@+id/logToFile"
         android:layout_alignParentEnd="true"
-        android:layout_alignStart="@+id/setter"
+        android:layout_alignStart="@+id/logToFile"
         android:onClick="sendJson" />
 
     <Button
@@ -53,14 +57,15 @@
         android:layout_alignParentEnd="true"
         android:layout_alignStart="@+id/json"
         android:id="@+id/event"
-        android:textSize="12sp"
-        android:onClick="markEvent"  />
+        android:onClick="markEvent"
+        android:textSize="13sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/event"
         android:id="@+id/deviceID"
-        android:layout_alignStart="@+id/event" />
+        android:layout_alignStart="@+id/event"
+        android:textSize="11sp" />
 
 </RelativeLayout>
