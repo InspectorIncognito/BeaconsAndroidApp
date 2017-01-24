@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <item
+        android:id="@+id/getIdDevice"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="@string/device_id"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/sendData"
+        android:icon="@android:drawable/ic_dialog_email"
+        android:title="@string/device_id"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/markEvent"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/mark_events"
+        app:showAsAction="always"/>
+
+</menu>

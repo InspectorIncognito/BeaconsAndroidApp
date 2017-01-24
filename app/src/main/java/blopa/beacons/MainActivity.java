@@ -6,12 +6,10 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.provider.Settings.Secure;
 
@@ -25,8 +23,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,34 +45,38 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
     private BeaconLog beaconLog;
     private long threshold;
     private long time;
-    private static final String FILENAME = "testBeacon.txt";
+//    private static final String FILENAME = "testBeacon.txt";
 
-    /**
-     * Beacon Scanner
-     **/
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
         threshold= 5;
         time= 0;
         android_id = Secure.getString(this.getContentResolver(),
                 Secure.ANDROID_ID);
-        ((TextView) findViewById(R.id.deviceID)).setText(android_id);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != 0)
-                    getLog(majorMinor.get(position).mAddress);
-            }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+//        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
+//        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                if (position != 0)
+//                    getLog(majorMinor.get(position).mAddress);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
 
         setupListView();
         setupBeaconSDK();
@@ -90,6 +90,9 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
         connectToService();
     }
 
+    /**
+     * Beacon Scanner
+     **/
     public void connectToService() {
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
@@ -147,9 +150,7 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
                 if(c.getTimeInMillis()- time >= threshold *1000) {
                     addBeaconsToOptions(list);
                     beaconLog.addMeasure(list, getTime(c));
-
-                    updateSpinner();
-
+//                    updateSpinner();
                     time= c.getTimeInMillis();
                 }
             }
@@ -160,24 +161,39 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
      * Buttons
      **/
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
 
-    public void logToFile(View view) {
-        File file = this.getExternalCacheDir();
-        File file2 = new File(file, FILENAME);
-        try {
-            FileOutputStream fos = new FileOutputStream(file2);
-            for (StringMacAddress mAddress : majorMinor) {
-                if (mAddress.majorMinor.equals("")) continue;
-                String string = beaconLog.getLog(mAddress.mAddress);
-                fos.write(string.getBytes());
-            }
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            case R.id.markEvent:
+                markEvent();
+                return true;
+
+            case R.id.sendData:
+                try {
+                    sendJson();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return true;
+
+            case R.id.getIdDevice:
+                DialogFragment newFragment = new DeviceIDDialogFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString("Device", this.android_id);
+                newFragment.setArguments(bundle);
+                newFragment.show(getSupportFragmentManager(), "events");
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
         }
     }
 
-    public void markEvent(View view) {
+    public void markEvent() {
 
         Calendar c = Calendar.getInstance();
         String strTime = getTime(c);
@@ -195,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
         events.add(new EventLog(strTime,text));
     }
 
-    public void sendJson(View view) throws JSONException, IOException {
+    public void sendJson() throws JSONException, IOException {
         JSONObject data= createJsonObject();
         JSONObject json= new JSONObject();
         json.put("DeviceID",android_id);
@@ -203,11 +219,6 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
         new AsyncConnection(json).execute();
     }
 
-    public void updateSpinner(){
-        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
-        ArrayAdapter<StringMacAddress> adapter2 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, majorMinor);
-        spinner.setAdapter(adapter2);
-    }
 
     /**
      * Aux functions
@@ -332,5 +343,32 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
                 pDialog.dismiss();
         }
     }
+
+    /**
+     * Unused
+     *
+     */
+
+//    public void logToFile(View view) {
+//        File file = this.getExternalCacheDir();
+//        File file2 = new File(file, FILENAME);
+//        try {
+//            FileOutputStream fos = new FileOutputStream(file2);
+//            for (StringMacAddress mAddress : majorMinor) {
+//                if (mAddress.majorMinor.equals("")) continue;
+//                String string = beaconLog.getLog(mAddress.mAddress);
+//                fos.write(string.getBytes());
+//            }
+//            fos.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public void updateSpinner(){
+//        Spinner spinner = (Spinner) findViewById(R.id.logBeaconsSpinner);
+//        ArrayAdapter<StringMacAddress> adapter2 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, majorMinor);
+//        spinner.setAdapter(adapter2);
+//    }
 }
 

@@ -6,12 +6,8 @@ import android.content.Context;
 import android.support.v4.app.DialogFragment ;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.EditText;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Blopa on 10-01-2017.

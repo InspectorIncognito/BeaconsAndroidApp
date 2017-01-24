@@ -36,6 +36,7 @@ public class NearestBeaconAdapter extends ArrayAdapter<Beacon> {
             rowView = inflater.inflate(R.layout.beacon_row, null);
             ViewHolder viewHolder = new ViewHolder();
             viewHolder.power = (TextView) rowView.findViewById(R.id.powerTextView);
+            viewHolder.uuid = (TextView) rowView.findViewById(R.id.uuidTextView);
             viewHolder.minor = (TextView) rowView.findViewById(R.id.minorTextView);
             viewHolder.major = (TextView) rowView.findViewById(R.id.majorTextView);
             rowView.setTag(viewHolder);
@@ -45,6 +46,7 @@ public class NearestBeaconAdapter extends ArrayAdapter<Beacon> {
 
         Beacon beacon = beacons.get(position);
         holder.power.setText(String.valueOf(beacon.getRssi()));
+        holder.uuid.setText(String.valueOf(beacon.getProximityUUID()));
         holder.minor.setText(String.valueOf(beacon.getMinor()));
         holder.major.setText(String.valueOf(beacon.getMajor()));
 
@@ -55,5 +57,6 @@ public class NearestBeaconAdapter extends ArrayAdapter<Beacon> {
         TextView power;
         TextView minor;
         TextView major;
+        TextView uuid;
     }
 }
