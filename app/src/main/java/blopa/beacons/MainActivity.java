@@ -1,8 +1,10 @@
 package blopa.beacons;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -170,13 +172,26 @@ public class MainActivity extends AppCompatActivity implements EventActivityInte
                 return true;
 
             case R.id.sendData:
-                try {
-                    sendJson();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                new AlertDialog.Builder(this)
+                        .setTitle("Confirm")
+                        .setMessage("Send your RSSI log to server?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int whichButton){
+                                try {
+                                    sendJson();
+                                } catch (JSONException e) {
+                                    Toast.makeText(MainActivity.this, "An error has occurred, check AndroidLog to more information", Toast.LENGTH_LONG);
+                                    Log.e("Send data to server",e.toString());
+                                } catch (IOException e) {
+                                    Toast.makeText(MainActivity.this, "An error has occurred, check AndroidLog to more information", Toast.LENGTH_LONG);
+                                    Log.e("Send data to server",e.toString());
+                                }
+                            }
+                        })
+                        .setNegativeButton("No",null)
+                        .create()
+                .show();
+
                 return true;
 
             case R.id.getIdDevice:
